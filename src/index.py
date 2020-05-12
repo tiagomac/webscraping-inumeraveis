@@ -1,3 +1,5 @@
+# pip install requests BeautifulSoup4 matplotlib
+
 from requests import get
 from requests.exceptions import RequestException
 from contextlib import closing
