@@ -7,12 +7,8 @@ from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 
 
+# --- STEP 01: Get the html ---
 def simple_get(url):
-    """
-    Attempts to get the content at `url` by making an HTTP GET request.
-    If the content-type of response is some kind of HTML/XML, return the
-    text content, otherwise return None.
-    """
     try:
         with closing(get(url, stream=True)) as resp:
             if is_good_response(resp):
@@ -26,9 +22,6 @@ def simple_get(url):
 
 
 def is_good_response(resp):
-    """
-    Returns True if the response seems to be HTML, False otherwise.
-    """
     content_type = resp.headers['Content-Type'].lower()
     return (resp.status_code == 200
             and content_type is not None
@@ -36,42 +29,52 @@ def is_good_response(resp):
 
 
 def log_error(e):
-    """
-    It is always a good idea to log errors.
-    This function just prints them, but you can
-    make it do anything.
-    """
     print(e)
 
 
-html = BeautifulSoup(simple_get("http://www.inumeraveis.com.br"), 'html.parser')
+html = BeautifulSoup(simple_get("https://inumeraveis.com.br/"), 'html.parser')
 
-idades = {}
+# --- STEP 02: Collect and sort the data ---
+ages = {}
 
 for item in html.select('h4 span'):
     ano = int(item.text.replace(' anos', ''))
-    if ano not in idades.keys():
-        idades[ano] = 1
+    if ano not in ages.keys():
+        ages[ano] = 1
         continue
-    idades[ano] = idades.get(ano) + 1
+    ages[ano] = ages.get(ano) + 1
 
-idades = sorted(idades.items(), key=lambda x: x[0])
-print(idades)
-xIdade = []
-yQtd = []
-for key, value in idades:
+ages = sorted(ages.items(), key=lambda x: x[0])
+print(ages)
+xAge = []
+yCount = []
+for key, value in ages:
     print(f'Idade: {key} Ocorrências: {value}')
-    xIdade.append(int(key))
-    yQtd.append(int(value))
+    xAge.append(int(key))
+    yCount.append(int(value))
 
 
-def createGraphic(xIdade, yQtd, idades):
-    plt.plot(xIdade, yQtd, 'bo--', label='mortes por idade', linewidth=1)
-    plt.xlabel('x - idade')
-    plt.ylabel('y - quantidade')
+# --- STEP 03: Plot the graphic ---
+def createGraphic(xAge, yCount):
+    fig, ax = plt.subplots()
+    plt.bar
+    ax.bar(xAge, yCount, align='center', alpha=0.5)
+    ax.set_xlabel('x - idade')
+    ax.set_ylabel('y - quantidade')
     plt.title('Quantidade de mortes por idade - COVID-19')
-    plt.legend()
+    ax.xaxis.set_ticks(xAge)
+    ax.yaxis.set_ticks(yCount)
+    ax.legend()
+    plt.gca().margins(x=0)
+    plt.gcf().canvas.draw()
+    tl = plt.gca().get_xticklabels()
+    maxsize = max([t.get_window_extent().width for t in tl])
+    m = 0.4
+    s = maxsize / plt.gcf().dpi * len(xAge) + 15 * m
+    margin = m / plt.gcf().get_size_inches()[0]
+    plt.gcf().subplots_adjust(left=margin, right=1. - margin)
+    plt.gcf().set_size_inches(s, plt.gcf().get_size_inches()[1])
     plt.show()
 
 
-createGraphic(xIdade, yQtd, idades)
+createGraphic(xAge, yCount)
